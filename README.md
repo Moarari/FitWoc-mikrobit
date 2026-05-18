@@ -41,4 +41,7 @@ Na tomto projekte tvrdo pracovali:
 
 1. Sklonuj si tento repozitár:
    ```bash
-   git clone [https://github.com/TVOJE-MENO/NAZOV-REPOZITARA.git](https://github.com/TVOJE-MENO/NAZOV-REPOZITARA.git)
+   git clone [[https://github.com/TVOJE-MENO/NAZOV-REPOZITARA.git](https://github.com/TVOJE-MENO/NAZOV-REPOZITARA.git](https://makecode.microbit.org/))
+2.Vytvor si na mikrobite 2 projekty a zadaj tam tento kod
+3.Jeden mikrobit(mikrobit primac) bude v pocitaci a druhy v powerbanke
+4.Stranku html otvorte na pocitaci a pripojte nan mikrobit
