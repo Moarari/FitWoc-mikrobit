@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html lang="sk">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Micro:bit Fitness Tracker</title>
+    <style>
+        :root {
+            --primary-sky: #4ea8de;    /* Jasná oblohová modrá */
+            --secondary-sky: #56cfe1;  /* Svetlá azúrová */
+            --accent-blue: #0077b6;     /* Hlbšia modrá pre dôležité texty */
+            --bg-gradient: linear-gradient(135deg, #e0f2fe 0%, #bae6fd 100%); /* Mäkké oblohové pozadie */
+            --dark-text: #1e293b;      /* Elegantná tmavá bridlicová pre čitateľnosť */
+        }
+
+        body { 
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
+            margin: 0; 
+            padding: 0;
+            background: var(--bg-gradient);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            color: var(--dark-text);
+        }
+
+        .container {
+            background: rgba(255, 255, 255, 0.95);
+            padding: 35px 30px;
+            border-radius: 24px;
+            box-shadow: 0 15px 35px rgba(78, 168, 222, 0.2);
+            width: 100%;
+            max-width: 400px;
+            text-align: center;
+            box-sizing: border-box;
+            border: 1px solid rgba(255, 255, 255, 0.6);
+        }
+
+        h1 { 
+            font-size: 26px;
+            margin-top: 0;
+            margin-bottom: 25px;
+            color: var(--accent-blue);
+            font-weight: 700;
+            letter-spacing: -0.5px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 10px;
+        }
+
+        h3 {
+            font-size: 18px;
+            color: var(--accent-blue);
+            margin: 20px 0 10px 0;
+            text-align: left;
+            font-weight: 600;
+        }
+
+        #connect {
+            background: linear-gradient(135deg, var(--primary-sky) 0%, var(--secondary-sky) 100%);
+            color: white;
+            border: none;
+            padding: 14px 28px;
+            font-size: 16px;
+            font-weight: 600;
+            border-radius: 16px;
+            cursor: pointer;
+            width: 100%;
+            margin-bottom: 30px;
+            transition: all 0.2s ease;
+            box-shadow: 0 4px 15px rgba(86, 207, 225, 0.3);
+        }
+
+        #connect:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(86, 207, 225, 0.5);
+            filter: brightness(1.05);
+        }
+
+        #connect:active {
+            transform: translateY(1px);
+        }
+
+        .data-container {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .data-box { 
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 16px 20px; 
+            background: #f8fafc; 
+            border: 1px solid #e2e8f0;
+            border-radius: 16px; 
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.01);
+            transition: all 0.2s ease;
+        }
+
+        .data-box:hover {
+            transform: translateY(-2px);
+            background: #ffffff;
+            border-color: var(--secondary-sky);
+            box-shadow: 0 6px 12px rgba(86, 207, 225, 0.1);
+        }
+
+        .label {
+            font-size: 14px;
+            text-transform: uppercase;
+            letter-spacing: 0.8px;
+            font-weight: 600;
+            color: #64748b;
+        }
+
+        .value {
+            font-size: 24px;
+            font-weight: 700;
+            color: var(--accent-blue);
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <h1>🌤️ Fitness Tracker</h1>
+        <button id="connect">Pripojiť Micro:bit</button>
+        
+        <h3>Aktuálne hodnoty</h3>
+        <div class="data-container">
+            <div class="data-box">
+                <span class="label">Kroky</span>
+                <span class="value" id="kroky">0</span>
+            </div>
+            <div class="data-box">
+                <span class="label">Kalórie</span>
+                <span class="value" id="kalorie">0 kcal</span>
+            </div>
+            <div class="data-box">
+                <span class="label">Vzdialenosť</span>
+                <span class="value" id="metre">0 m</span>
+            </div>
+        </div>
+
+        <h3>🏆 Osobný rekord</h3>
+        <div class="data-container">
+            <div class="data-box">
+                <span class="label">Najviac krokov</span>
+                <span class="value" id="rekord-kroky">0</span>
+            </div>
+            <div class="data-box">
+                <span class="label">Najviac kalórií</span>
+                <span class="value" id="rekord-kalorie">0 kcal</span>
+            </div>
+            <div class="data-box">
+                <span class="label">Najväčšia vzdial.</span>
+                <span class="value" id="rekord-metre">0 m</span>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let port;
+        const connectBtn = document.getElementById('connect');
+
+        // Premenné na sledovanie max. hodnôt pre rekord
+        let maxKroky = 0;
+        let maxKalorie = 0;
+        let maxMetre = 0;
+
+        connectBtn.addEventListener('click', async () => {
+            try {
+                port = await navigator.serial.requestPort();
+                await port.open({ baudRate: 115200 });
+                connectBtn.innerText = "☁️ Pripojené!";
+                connectBtn.style.background = "#38bdf8"; // Pekná čistá svetlomodrá po pripojení
+                connectBtn.style.boxShadow = "none";
+                
+                const decoder = new TextDecoderStream();
+                port.readable.pipeTo(decoder.writable);
+                const reader = decoder.readable.getReader();
+
+                let buffer = "";
+
+                while (true) {
+                    const { value, done } = await reader.read();
+                    if (done) break;
+                    if (value) {
+                        buffer += value;
+                        let lines = buffer.split("\n");
+                        buffer = lines.pop();
+
+                        for (let line of lines) {
+                            line = line.trim();
+                            if (line.includes(":")) {
+                                let parts = line.split(":");
+                                let kluc = parts[0];
+                                let hodnota = parts[1];
+
+                                if (kluc === "kroky") {
+                                    document.getElementById("kroky").innerText = hodnota;
+                                    
+                                    let aktKroky = parseInt(hodnota);
+                                    if (aktKroky > maxKroky) {
+                                        maxKroky = aktKroky;
+                                        document.getElementById("rekord-kroky").innerText = hodnota;
+                                    }
+                                }
+                                if (kluc === "kalorie") {
+                                    document.getElementById("kalorie").innerText = hodnota + " kcal";
+                                    
+                                    let aktKalorie = parseFloat(hodnota);
+                                    if (aktKalorie > maxKalorie) {
+                                        maxKalorie = aktKalorie;
+                                        document.getElementById("rekord-kalorie").innerText = hodnota + " kcal";
+                                    }
+                                }
+                                if (kluc === "metre") {
+                                    document.getElementById("metre").innerText = hodnota + " m";
+                                    
+                                    let aktMetre = parseFloat(hodnota);
+                                    if (aktMetre > maxMetre) {
+                                        maxMetre = aktMetre;
+                                        document.getElementById("rekord-metre").innerText = hodnota + " m";
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            } catch (error) {
+                console.error("Chyba:", error);
+                alert("Nepodarilo sa pripojiť k Micro:bitu.");
+            }
+        });
+    </script>
+</body>
+</html>
